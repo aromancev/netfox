@@ -3,12 +3,16 @@ class_name _Snapshot
 
 # Stores property values of multiple subjects, recorded for a specific tick
 
+const _FLAG_INPUTS_COMPLETE := 1
+
 var tick: int
+var flags := 0
 var _data := {} # object to (property to variant)
 var _auth_subjects := _Set.new()
 
 static func make_patch(from: _Snapshot, to: _Snapshot, tick: int = to.tick) -> _Snapshot:
 	var patch := _Snapshot.new(tick)
+	patch.flags = to.flags
 
 	for subject in from.get_subjects():
 		assert(is_instance_valid(subject))
@@ -48,6 +52,7 @@ func _init(p_tick: int):
 
 func duplicate() -> _Snapshot:
 	var result := _Snapshot.new(tick)
+	result.flags = flags
 	result._data = _data.duplicate(true)
 	result._auth_subjects = _auth_subjects.duplicate()
 	return result
@@ -156,9 +161,18 @@ func size() -> int:
 func is_auth(subject: Object) -> bool:
 	return _auth_subjects.has(subject)
 
+func is_inputs_complete() -> bool:
+	return (flags & _FLAG_INPUTS_COMPLETE) != 0
+
+func set_inputs_complete(inputs_complete: bool) -> void:
+	if inputs_complete:
+		flags |= _FLAG_INPUTS_COMPLETE
+	else:
+		flags &= _FLAG_INPUTS_COMPLETE
+
 func equals(other) -> bool:
 	if other is _Snapshot:
-		return tick == other.tick and _data == other._data and _auth_subjects.equals(other._auth_subjects)
+		return tick == other.tick and flags == other.flags and _data == other._data and _auth_subjects.equals(other._auth_subjects)
 	else:
 		return false
 
@@ -174,6 +188,7 @@ func _to_string() -> String:
 func _to_vest():
 	return {
 		"tick": tick,
+		"flags": flags,
 		"data": _data,
 		"auth_subjects": _auth_subjects
 	}

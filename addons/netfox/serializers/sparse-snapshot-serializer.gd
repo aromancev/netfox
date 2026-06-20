@@ -16,6 +16,7 @@ func write_for(peer: int, snapshot: _Snapshot, properties: _PropertyPool, filter
 	# Add a timestamp to every packet
 	packet_buffer.packet_setup = func(packet: StreamPeerBuffer):
 		packet.put_u32(snapshot.tick)
+		packet.put_u8(snapshot.flags)
 
 	# For each node
 	for subject in properties.get_subjects():
@@ -64,6 +65,7 @@ func read_from(peer: int, properties: _PropertyPool, buffer: StreamPeerBuffer, i
 	# Grab ticks
 	var tick := buffer.get_u32()
 	var snapshot := _Snapshot.new(tick)
+	snapshot.flags = buffer.get_u8()
 
 	while buffer.get_available_bytes() > 0:
 		# Read header, including identity reference
